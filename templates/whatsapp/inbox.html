@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}WhatsApp{% endblock %}
+{% block content %}
+<h4 class="mb-3">WhatsApp Integration</h4>
+<div class="alert alert-info">
+    This is a placeholder inbox. Full WhatsApp automation (auto-creating leads from inbound messages) is planned as future work.
+</div>
+<table class="table table-striped bg-white">
+    <thead><tr><th>From</th><th>Message</th><th>Received</th><th>Linked Lead</th></tr></thead>
+    <tbody>
+    {% for msg in messages_list %}
+        <tr>
+            <td>{{ msg.from_number }}</td>
+            <td>{{ msg.text|default:"—" }}</td>
+            <td>{{ msg.received_at|date:"d M Y, H:i" }}</td>
+            <td>{% if msg.lead %}<a href="{% url 'leads:detail' msg.lead.pk %}">{{ msg.lead.lead_id }}</a>{% else %}—{% endif %}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="4" class="text-center text-muted">No messages yet.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

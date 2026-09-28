@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+{% block title %}Login - Socio Sarthi CRM{% endblock %}
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-brand"><i class="bi bi-hexagon-fill"></i> Socio Sarthi CRM</div>
+        <form method="post">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            <button type="submit" class="btn btn-primary w-100 mt-2">Login</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

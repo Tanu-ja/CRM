@@ -1,0 +1,22 @@
+<table class="table table-striped bg-white">
+    <thead><tr><th>Lead</th><th>Scheduled</th><th>Type</th><th>Note</th><th>Assigned To</th><th></th></tr></thead>
+    <tbody>
+    {% for followup in followups %}
+        <tr>
+            <td><a href="{% url 'leads:detail' followup.lead.pk %}">{{ followup.lead.lead_id }}</a> — {{ followup.lead.name|default:followup.lead.phone }}</td>
+            <td>{{ followup.scheduled_at|date:"d M Y, H:i" }}</td>
+            <td>{{ followup.get_type_display }}</td>
+            <td>{{ followup.note|default:"—" }}</td>
+            <td>{{ followup.assigned_to.get_full_name|default:followup.assigned_to.email }}</td>
+            <td>
+                <form method="post" action="{% url 'leads:followup_complete' followup.pk %}">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-success">Mark Complete</button>
+                </form>
+            </td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="6" class="text-center text-muted">Nothing in this bucket.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>

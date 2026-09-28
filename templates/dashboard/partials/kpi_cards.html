@@ -1,0 +1,10 @@
+{% with k=kpis %}
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md"><div class="card stat-card"><div class="card-body py-3"><h3>{{ k.total }}</h3><small>Total</small></div></div></div>
+    <div class="col-6 col-md"><div class="card stat-card"><div class="card-body py-3"><h3>{{ k.new }}</h3><small>New</small></div></div></div>
+    <div class="col-6 col-md"><div class="card stat-card"><div class="card-body py-3"><h3>{{ k.follow_up }}</h3><small>Follow Up</small></div></div></div>
+    <div class="col-6 col-md"><div class="card stat-card"><div class="card-body py-3"><h3>{{ k.counselling }}</h3><small>Counselling</small></div></div></div>
+    <div class="col-6 col-md"><div class="card stat-card"><div class="card-body py-3"><h3>{{ k.admission_confirmed }}</h3><small>Admissions</small></div></div></div>
+    <div class="col-6 col-md"><div class="card stat-card"><div class="card-body py-3"><h3>{{ k.lost }}</h3><small>Lost</small></div></div></div>
+</div>
+{% endwith %}

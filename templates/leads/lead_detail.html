@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+{% block title %}{{ lead.lead_id }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h4>{{ lead.lead_id }} &mdash; {{ lead.name|default:"Unnamed lead" }}</h4>
+        <p class="text-muted mb-0">
+            <a href="tel:{{ lead.phone }}">{{ lead.phone }}</a>
+            {% if lead.email %} &middot; {{ lead.email }}{% endif %}
+            &middot; {{ lead.client.name }}
+        </p>
+    </div>
+    <div>
+        <span class="badge bg-info text-dark">{{ lead.get_status_display }}</span>
+        <span class="badge bg-warning text-dark">{{ lead.get_temperature_display }}</span>
+    </div>
+</div>
+
+<ul class="nav nav-tabs" id="leadTabs" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-overview" type="button">Overview</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-calls" type="button">Calls ({{ lead.calls.count }})</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-followups" type="button">Follow-ups ({{ lead.followups.count }})</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-admission" type="button">Admission</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-timeline" type="button">Timeline</button></li>
+</ul>
+
+<div class="tab-content bg-white p-3 border border-top-0">
+
+    <div class="tab-pane fade show active" id="tab-overview">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Status &amp; Temperature</h6>
+                <form method="post" action="{% url 'leads:update_status' lead.pk %}" class="row g-2">
+                    {% csrf_token %}
+                    {% bootstrap_form status_form layout="inline" %}
+                    <div class="col-12"><button class="btn btn-sm btn-primary">Update</button></div>
+                </form>
+
+                {% if not request.user.is_telecaller %}
+                <hr>
+                <h6>Reassign</h6>
+                <form method="post" action="{% url 'leads:reassign' lead.pk %}" class="row g-2">
+                    {% csrf_token %}
+                    {% bootstrap_form reassign_form layout="inline" %}
+                    <div class="col-12"><button class="btn btn-sm btn-outline-secondary">Reassign</button></div>
+                </form>
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <h6>Attribution</h6>
+                <dl class="row mb-0">
+                    <dt class="col-5">Source</dt><dd class="col-7">{{ lead.original_source|default:"—" }}</dd>
+                    <dt class="col-5">Campaign</dt><dd class="col-7">{{ lead.original_campaign|default:"—" }}</dd>
+                    <dt class="col-5">Ad</dt><dd class="col-7">{{ lead.original_ad|default:"—" }}</dd>
+                    <dt class="col-5">First touch</dt><dd class="col-7">{{ lead.first_touch_at|date:"d M Y, H:i" }}</dd>
+                    <dt class="col-5">Assigned to</dt><dd class="col-7">{{ lead.assigned_to.get_full_name|default:"Unassigned" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="tab-calls">
+        <div x-data="{ seconds: 0, running: false, timer: null,
+                        start(){ this.running = true; this.timer = setInterval(() => this.seconds++, 1000); },
+                        stop(){ this.running = false; clearInterval(this.timer); } }">
+            <form method="post" action="{% url 'leads:add_call' lead.pk %}" class="row g-2 mb-3">
+                {% csrf_token %}
+                {% bootstrap_form call_form layout="inline" %}
+                <input type="hidden" name="duration_seconds" x-bind:value="seconds">
+                <div class="col-12">
+                    <button type="button" class="btn btn-sm btn-outline-success" x-show="!running" @click="start()">Start Call Timer</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" x-show="running" @click="stop()">Stop</button>
+                    <span class="ms-2" x-text="seconds + 's'"></span>
+                    <button type="submit" class="btn btn-sm btn-primary">Log Call</button>
+                </div>
+            </form>
+        </div>
+        <table class="table table-sm">
+            <thead><tr><th>When</th><th>Outcome</th><th>Duration</th><th>Remarks</th><th>By</th></tr></thead>
+            <tbody>
+            {% for call in lead.calls.all %}
+                <tr>
+                    <td>{{ call.created_at|date:"d M, H:i" }}</td>
+                    <td>{{ call.get_outcome_display }}</td>
+                    <td>{{ call.duration_seconds }}s</td>
+                    <td>{{ call.remarks|default:"—" }}</td>
+                    <td>{{ call.staff.get_full_name|default:call.staff.email }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5" class="text-muted text-center">No calls logged yet.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="tab-pane fade" id="tab-followups">
+        <form method="post" action="{% url 'leads:add_followup' lead.pk %}" class="row g-2 mb-3">
+            {% csrf_token %}
+            {% bootstrap_form followup_form layout="inline" %}
+            <div class="col-12"><button class="btn btn-sm btn-primary">Schedule Follow-up</button></div>
+        </form>
+        <table class="table table-sm">
+            <thead><tr><th>Scheduled</th><th>Type</th><th>Note</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            {% for followup in lead.followups.all %}
+                <tr>
+                    <td>{{ followup.scheduled_at|date:"d M, H:i" }}</td>
+                    <td>{{ followup.get_type_display }}</td>
+                    <td>{{ followup.note|default:"—" }}</td>
+                    <td>{{ followup.get_status_display }}</td>
+                    <td>
+                        {% if followup.status == "OPEN" %}
+                        <form method="post" action="{% url 'leads:followup_complete' followup.pk %}">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-outline-success">Mark Complete</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5" class="text-muted text-center">No follow-ups scheduled.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="tab-pane fade" id="tab-admission">
+        {% with admission=lead.current_admission %}
+        {% if admission %}
+        <dl class="row">
+            <dt class="col-3">Admission #</dt><dd class="col-9">{{ admission.admission_number }}</dd>
+            <dt class="col-3">Status</dt><dd class="col-9">{{ admission.get_status_display }}</dd>
+            <dt class="col-3">Amount</dt><dd class="col-9">₹{{ admission.amount }}</dd>
+            <dt class="col-3">Commission</dt><dd class="col-9">₹{{ admission.commission }}</dd>
+        </dl>
+        <hr>
+        {% endif %}
+        {% endwith %}
+        <h6>{% if lead.current_admission %}Resubmit / Update Admission{% else %}Record Admission{% endif %}</h6>
+        <form method="post" action="{% url 'leads:add_admission' lead.pk %}" class="row g-2">
+            {% csrf_token %}
+            {% bootstrap_form admission_form %}
+            <div class="col-12"><button class="btn btn-primary">Save Admission</button></div>
+        </form>
+    </div>
+
+    <div class="tab-pane fade" id="tab-timeline">
+        <ul class="list-group">
+            {% for item in timeline %}
+            <li class="list-group-item">
+                <strong>{{ item.created_at|date:"d M Y, H:i" }}</strong> &mdash;
+                {% if item.outcome %}Call: {{ item.get_outcome_display }} ({{ item.duration_seconds }}s)
+                {% elif item.scheduled_at %}Follow-up scheduled for {{ item.scheduled_at|date:"d M, H:i" }} ({{ item.get_type_display }})
+                {% elif item.admission_number %}Admission {{ item.admission_number }} recorded as {{ item.get_status_display }}
+                {% endif %}
+            </li>
+            {% empty %}
+            <li class="list-group-item text-muted text-center">No activity yet.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

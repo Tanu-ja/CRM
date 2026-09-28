@@ -1,0 +1,11 @@
+from django.urls import path
+
+from . import views
+
+app_name = "clients"
+
+urlpatterns = [
+    path("", views.ClientListView.as_view(), name="list"),
+    path("add/", views.ClientCreateView.as_view(), name="add"),
+    path("<int:pk>/toggle-active/", views.client_toggle_active, name="toggle_active"),
+]

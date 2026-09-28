@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Clients{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Clients</h4>
+    <a href="{% url 'clients:add' %}" class="btn btn-primary btn-sm">+ Add Client</a>
+</div>
+<table class="table table-striped bg-white">
+    <thead><tr><th>Name</th><th>Code</th><th>Commission / Admission</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>
+        {% for client in clients %}
+        <tr>
+            <td>{{ client.name }}</td>
+            <td>{{ client.code }}</td>
+            <td>₹{{ client.commission_per_admission }}</td>
+            <td>
+                {% if client.is_active %}<span class="badge bg-success">Active</span>
+                {% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}
+            </td>
+            <td>
+                <form method="post" action="{% url 'clients:toggle_active' client.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-warning">
+                        {% if client.is_active %}Deactivate{% else %}Activate{% endif %}
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-muted">No clients yet.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

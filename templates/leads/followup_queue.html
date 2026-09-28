@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Follow-up Queue{% endblock %}
+{% block content %}
+<h4 class="mb-3">Follow-up Queue</h4>
+<ul class="nav nav-pills mb-3" id="bucket-tabs">
+    <li class="nav-item">
+        <a class="nav-link {% if bucket == 'overdue' %}active{% endif %}" href="#"
+           hx-get="{% url 'leads:followup_queue' %}?bucket=overdue" hx-target="#followup-panel" hx-push-url="true">
+           Overdue <span class="badge bg-danger">{{ counts.overdue }}</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if bucket == 'today' %}active{% endif %}" href="#"
+           hx-get="{% url 'leads:followup_queue' %}?bucket=today" hx-target="#followup-panel" hx-push-url="true">
+           Due Today <span class="badge bg-warning text-dark">{{ counts.today }}</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if bucket == 'upcoming' %}active{% endif %}" href="#"
+           hx-get="{% url 'leads:followup_queue' %}?bucket=upcoming" hx-target="#followup-panel" hx-push-url="true">
+           Upcoming <span class="badge bg-secondary">{{ counts.upcoming }}</span>
+        </a>
+    </li>
+</ul>
+<div id="followup-panel">
+    {% include "leads/partials/followup_list.html" %}
+</div>
+{% endblock %}

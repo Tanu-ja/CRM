@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Leads{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Leads</h4>
+    <a href="{% url 'leads:add' %}" class="btn btn-primary btn-sm">+ Add Lead</a>
+</div>
+
+<form class="row g-2 mb-3" hx-get="{% url 'leads:list' %}" hx-target="#lead-table" hx-select="#lead-table" hx-swap="outerHTML" hx-trigger="keyup changed delay:300ms from:#id_q, change from:#id_status, change from:#id_temperature, change from:#id_period">
+    <div class="col-md-4">
+        <input type="text" id="id_q" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Search name, phone, lead ID, email">
+    </div>
+    <div class="col-md-2">
+        <select id="id_status" name="status" class="form-select">
+            <option value="">All statuses</option>
+            {% for value, label in lead_status_choices %}
+                <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select id="id_temperature" name="temperature" class="form-select">
+            <option value="">All temperatures</option>
+            {% for value, label in temperature_choices %}
+                <option value="{{ value }}" {% if request.GET.temperature == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select id="id_period" name="period" class="form-select">
+            <option value="">All time</option>
+            <option value="today" {% if request.GET.period == "today" %}selected{% endif %}>Today</option>
+            <option value="week" {% if request.GET.period == "week" %}selected{% endif %}>This week</option>
+            <option value="month" {% if request.GET.period == "month" %}selected{% endif %}>This month</option>
+        </select>
+    </div>
+</form>
+
+{% include "leads/partials/lead_table.html" %}
+{% endblock %}

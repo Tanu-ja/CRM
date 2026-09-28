@@ -1,0 +1,45 @@
+<div id="lead-table">
+<table class="table table-striped table-hover bg-white">
+    <thead>
+        <tr>
+            <th>Lead ID</th><th>Name</th><th>Phone</th><th>Status</th><th>Temperature</th>
+            <th>Assigned To</th><th>Next Follow-up</th><th>Created</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for lead in leads %}
+        <tr>
+            <td><a href="{% url 'leads:detail' lead.pk %}">{{ lead.lead_id }}</a></td>
+            <td>{{ lead.name|default:"—" }}</td>
+            <td>{{ lead.phone }}</td>
+            <td><span class="badge bg-info text-dark">{{ lead.get_status_display }}</span></td>
+            <td>
+                {% if lead.temperature == "HOT" %}<span class="badge bg-danger">Hot</span>
+                {% elif lead.temperature == "WARM" %}<span class="badge bg-warning text-dark">Warm</span>
+                {% elif lead.temperature == "COLD" %}<span class="badge bg-secondary">Cold</span>
+                {% else %}<span class="badge bg-dark">Unqualified</span>{% endif %}
+            </td>
+            <td>{{ lead.assigned_to.get_full_name|default:lead.assigned_to.email|default:"Unassigned" }}</td>
+            <td>{{ lead.next_follow_up_at|date:"d M, H:i"|default:"—" }}</td>
+            <td>{{ lead.created_at|date:"d M Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" class="text-center text-muted">No leads found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if is_paginated %}
+<nav>
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% endif %}
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+</div>

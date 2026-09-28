@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+{% block title %}Import Leads{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <h4>Import Leads (CSV)</h4>
+        <p class="text-muted">Max 5,000 rows per file. Duplicate and invalid rows are skipped and reported, not overwritten.</p>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            <button type="submit" class="btn btn-primary">Upload &amp; Import</button>
+        </form>
+        <a href="{% url 'csv_import:history' %}" class="d-inline-block mt-3">View full import history &rarr;</a>
+    </div>
+    <div class="col-md-6">
+        <h6>Recent Imports</h6>
+        <ul class="list-group">
+            {% for batch in recent_batches %}
+            <li class="list-group-item">
+                <strong>{{ batch.filename }}</strong> ({{ batch.client.code }})<br>
+                <small class="text-muted">{{ batch.created_at|date:"d M Y, H:i" }}</small><br>
+                {{ batch.created_count }} created &middot; {{ batch.duplicate_count }} duplicates &middot; {{ batch.invalid_count }} invalid
+            </li>
+            {% empty %}
+            <li class="list-group-item text-muted">No imports yet.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

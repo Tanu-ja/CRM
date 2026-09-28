@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h4 class="mb-3">Super Admin Dashboard</h4>
+<div id="kpi-cards" hx-get="{% url 'dashboard:kpi_fragment' %}" hx-trigger="load, every 30s" hx-swap="innerHTML">
+    {% include "dashboard/partials/kpi_cards.html" %}
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header">Leads by Client</div>
+            <ul class="list-group list-group-flush">
+                {% for row in per_client %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>{{ row.client__name }}</span>
+                    <span>{{ row.total }} total &middot; {{ row.confirmed }} confirmed</span>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">No leads yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header">Recent Activity (Audit Log)</div>
+            <ul class="list-group list-group-flush">
+                {% for log in recent_audit %}
+                <li class="list-group-item">
+                    <small class="text-muted">{{ log.created_at|date:"d M, H:i" }}</small>
+                    &mdash; {{ log.actor.email|default:"system" }}: {{ log.action }} ({{ log.entity }})
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">No activity yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <a href="{% url 'csv_import:upload' %}" class="btn btn-outline-primary"><i class="bi bi-upload"></i> Bulk Import Leads (CSV)</a>
+        <a href="{% url 'whatsapp:inbox' %}" class="btn btn-outline-success ms-2"><i class="bi bi-whatsapp"></i> WhatsApp Integration</a>
+    </div>
+</div>
+{% endblock %}

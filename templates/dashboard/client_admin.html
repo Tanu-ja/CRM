@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h4 class="mb-3">{{ request.user.client.name }} Dashboard</h4>
+<div id="kpi-cards" hx-get="{% url 'dashboard:kpi_fragment' %}" hx-trigger="load, every 30s" hx-swap="innerHTML">
+    {% include "dashboard/partials/kpi_cards.html" %}
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header">Leads by Telecaller</div>
+            <ul class="list-group list-group-flush">
+                {% for row in per_telecaller %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>{{ row.assigned_to__first_name|default:row.assigned_to__email }} {{ row.assigned_to__last_name }}</span>
+                    <span>{{ row.total }} leads</span>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">No leads yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header">Admissions Summary</div>
+            <div class="card-body">
+                <p>Confirmed: {{ admissions_summary.confirmed_count|default:0 }}</p>
+                <p>Pending: {{ admissions_summary.pending_count|default:0 }}</p>
+                <p>Commission Earned: ₹{{ admissions_summary.confirmed_commission|default:0 }}</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">Follow-up Queue</div>
+            <div class="card-body">
+                <a href="{% url 'leads:followup_queue' %}?bucket=overdue" class="badge bg-danger text-decoration-none">Overdue: {{ followup_counts.overdue }}</a>
+                <a href="{% url 'leads:followup_queue' %}?bucket=today" class="badge bg-warning text-dark text-decoration-none">Today: {{ followup_counts.today }}</a>
+                <a href="{% url 'leads:followup_queue' %}?bucket=upcoming" class="badge bg-secondary text-decoration-none">Upcoming: {{ followup_counts.upcoming }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
